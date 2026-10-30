@@ -1,0 +1,10 @@
+{
+  "description": "Book and track premium home and office cleaning, customize services, choose trusted cleaners, and manage payments and appointments with ease.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
