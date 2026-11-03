@@ -507,6 +507,15 @@ function Home({ go }: { go: (s: Screen) => void }) {
         ))}
       </div>
       <div className="section-head">
+        <h2>Antes y después</h2>
+        <button type="button" onClick={() => go("detail")}>
+          Cómo lo hacemos
+        </button>
+      </div>
+      <div className="home-ba">
+        <BeforeAfter />
+      </div>
+      <div className="section-head">
         <h2>Servicios populares</h2>
         <button type="button" onClick={() => go("categories")}>
           Ver todo
@@ -646,6 +655,14 @@ function Detail({ go }: { go: (s: Screen) => void }) {
             </div>
           ))}
         </div>
+        <hr />
+        <span className="eyebrow">RESULTADOS REALES</span>
+        <h2 className="detail-h2">Antes y después</h2>
+        <BeforeAfter />
+        <hr />
+        <span className="eyebrow">PASO A PASO</span>
+        <h2 className="detail-h2">Cómo realizamos tu limpieza</h2>
+        <HowWeWork />
         <button
           type="button"
           className="review-preview"
@@ -1832,6 +1849,355 @@ function Help({ go }: { go: (s: Screen) => void }) {
   )
 }
 
+/* ───────────── Antes y después ───────────── */
+
+const unsplash = (id: string, w = 900) =>
+  `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=${w}&q=80`
+
+const beforeAfter = [
+  {
+    room: "Cocina",
+    before: unsplash("1516775448597-64ce06b9754e"),
+    after: unsplash("1623167940644-24b564748335"),
+    note: "Trastes lavados, tarja desinfectada y barra despejada.",
+  },
+  {
+    room: "Sala",
+    before: unsplash("1546617956-e3deefb51d58"),
+    after: interior2,
+    note: "Cojines acomodados, superficies sin polvo y piso aspirado.",
+  },
+  {
+    room: "Recámara",
+    before: unsplash("1644682533649-58c09f74b03c"),
+    after: unsplash("1612152605347-f93296cb657d"),
+    note: "Cama tendida con sábanas limpias y espacio ordenado.",
+  },
+]
+
+function BeforeAfter() {
+  const [tab, setTab] = useState(0)
+  const [pos, setPos] = useState(50)
+  const item = beforeAfter[tab]
+  return (
+    <div className="ba">
+      <div className="ba-tabs">
+        {beforeAfter.map((b, i) => (
+          <button
+            type="button"
+            key={b.room}
+            className={tab === i ? "active" : ""}
+            onClick={() => {
+              setTab(i)
+              setPos(50)
+            }}
+          >
+            {b.room}
+          </button>
+        ))}
+      </div>
+      <div className="ba-frame">
+        <img src={item.after} alt={`${item.room} después de la limpieza`} />
+        <img
+          src={item.before}
+          alt={`${item.room} antes de la limpieza`}
+          className="ba-before"
+          style={{ clipPath: `inset(0 ${100 - pos}% 0 0)` }}
+        />
+        <span className="ba-label ba-label-before">ANTES</span>
+        <span className="ba-label ba-label-after">DESPUÉS</span>
+        <div className="ba-handle" style={{ left: `${pos}%` }}>
+          <span>
+            <Icon name="back" size={13} />
+            <Icon name="arrow" size={13} />
+          </span>
+        </div>
+        <input
+          type="range"
+          min={0}
+          max={100}
+          value={pos}
+          onChange={(e) => setPos(Number(e.target.value))}
+          aria-label="Desliza para comparar el antes y el después"
+        />
+      </div>
+      <p className="ba-note">
+        <Icon name="sparkle" size={14} /> {item.note}
+      </p>
+      <small className="ba-hint">Desliza la barra para comparar</small>
+    </div>
+  )
+}
+
+const processSteps: [string, string, string][] = [
+  [
+    "search",
+    "Revisamos tu espacio contigo",
+    "Al llegar, la profesional confirma lo que pediste al personalizar y las áreas que más te importan.",
+  ],
+  [
+    "sparkle",
+    "Limpiamos de arriba hacia abajo",
+    "Primero polvo de lámparas, repisas y muebles; después superficies. Así nada se vuelve a ensuciar.",
+  ],
+  [
+    "droplet",
+    "Desinfectamos cocina y baños",
+    "Usamos productos biodegradables y paños de microfibra distintos para cada área.",
+  ],
+  [
+    "check",
+    "Pisos, toques finales y revisión",
+    "Aspiramos y trapeamos, y recorremos el espacio contigo antes de irnos. Recibes fotos del resultado en la app.",
+  ],
+]
+
+function HowWeWork() {
+  return (
+    <div className="how">
+      {processSteps.map(([icon, title, body], i) => (
+        <div className="how-step" key={title}>
+          <span className="how-num">
+            <Icon name={icon} size={17} />
+            <i>{i + 1}</i>
+          </span>
+          <div>
+            <b>{title}</b>
+            <p>{body}</p>
+          </div>
+        </div>
+      ))}
+      <div className="how-kit">
+        <b>Nosotros llevamos todo:</b> productos ecológicos, aspiradora,
+        trapeador y paños de microfibra.
+      </div>
+    </div>
+  )
+}
+
+/* ───────────── Asistente virtual (chatbot) ───────────── */
+
+type BotMsg = {
+  from: "bot" | "me"
+  text: string
+  action?: { label: string; screen: Screen }
+}
+
+const quickQuestions = [
+  "¿Cuánto cuesta?",
+  "Métodos de pago",
+  "¿Cómo es el servicio?",
+  "Cancelar o reprogramar",
+  "¿Qué productos usan?",
+  "¿Es seguro?",
+]
+
+const normalize = (s: string) =>
+  s
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+
+const botAnswers: { keys: string[]; reply: Omit<BotMsg, "from"> }[] = [
+  {
+    keys: ["cuanto", "cuesta", "precio", "costo", "cobran", "tarifa", "caro"],
+    reply: {
+      text: "La Limpieza Signature cuesta desde $1,290 por visita. El precio final depende de cuántas recámaras (+$150 c/u) y baños (+$120 c/u) tengas, y de los extras que agregues. Si eliges limpieza semanal ahorras 15%. Siempre ves el total exacto antes de pagar, sin cargos sorpresa.",
+      action: { label: "Calcular mi precio", screen: "customize" },
+    },
+  },
+  {
+    keys: ["pago", "pagar", "tarjeta", "efectivo", "transferencia", "metodo"],
+    reply: {
+      text: "Puedes pagar con tarjeta de crédito o débito (Visa, Mastercard o American Express) directo en la app. El cobro se hace hasta que termina la limpieza. Puedes cambiar tu tarjeta en Perfil → Métodos de pago.",
+      action: { label: "Ver métodos de pago", screen: "checkout" },
+    },
+  },
+  {
+    keys: ["servicio", "como es", "como funciona", "incluye", "proceso", "realizan", "hacen", "antes", "despues"],
+    reply: {
+      text: "Funciona en 4 pasos: 1) revisamos tu espacio contigo, 2) limpiamos de arriba hacia abajo, 3) desinfectamos cocina y baños y 4) terminamos con pisos y una revisión final junto contigo. En el detalle del servicio puedes ver fotos de antes y después.",
+      action: { label: "Ver antes y después", screen: "detail" },
+    },
+  },
+  {
+    keys: ["cancel", "reprogram", "cambiar fecha", "mover", "otro dia", "horario"],
+    reply: {
+      text: "Puedes cancelar o reprogramar sin costo hasta 24 horas antes de tu cita desde Mis reservas. Si cancelas con menos tiempo se cobra el 50% del servicio.",
+      action: { label: "Ir a Mis reservas", screen: "bookings" },
+    },
+  },
+  {
+    keys: ["producto", "quimico", "eco", "alerg", "mascota", "nino", "bebe"],
+    reply: {
+      text: "Usamos productos biodegradables, seguros para niños y mascotas. Nosotros los llevamos, igual que la aspiradora y los paños. Si prefieres que usemos los tuyos, indícalo al personalizar tu limpieza.",
+    },
+  },
+  {
+    keys: ["segur", "confian", "verific", "garantia", "robo", "danio", "dano"],
+    reply: {
+      text: "Todas las profesionales pasan verificación de identidad y antecedentes, y ves sus calificaciones antes de elegir. Además, si no quedas satisfecha, regresamos a limpiar de nuevo sin costo en las siguientes 24 horas.",
+      action: { label: "Ver profesionales", screen: "cleaner" },
+    },
+  },
+  {
+    keys: ["cuenta", "registr", "sesion", "contrasena", "login", "datos"],
+    reply: {
+      text: "Para reservar solo necesitas tu nombre, correo y una contraseña, o entrar con Google. Tu dirección solo se comparte con la profesional asignada el día del servicio.",
+    },
+  },
+  {
+    keys: ["persona", "humano", "agente", "asesor", "llamar", "telefono"],
+    reply: {
+      text: "Claro, te comunico con nuestro equipo de atención. Normalmente responden en menos de 5 minutos.",
+      action: { label: "Ir al Centro de ayuda", screen: "help" },
+    },
+  },
+  {
+    keys: ["hola", "buenas", "buenos", "hey"],
+    reply: { text: "¡Hola! 😊 ¿En qué te puedo ayudar? Puedes escribir tu duda o tocar una de las preguntas de abajo." },
+  },
+  {
+    keys: ["gracias", "grax", "perfecto", "listo"],
+    reply: { text: "¡Con gusto! Si tienes otra duda, aquí estoy. ✨" },
+  },
+]
+
+function botReply(question: string): Omit<BotMsg, "from"> {
+  const q = normalize(question)
+  const found = botAnswers.find((a) => a.keys.some((k) => q.includes(k)))
+  return (
+    found?.reply ?? {
+      text: "Mmm, esa no me la sé todavía 🤔. Puedo ayudarte con precios, métodos de pago, cómo es el servicio, cancelaciones o productos. También puedo pasarte con una persona.",
+      action: { label: "Hablar con una persona", screen: "help" },
+    }
+  )
+}
+
+function Assistant({ go }: { go: (s: Screen) => void }) {
+  const [open, setOpen] = useState(false)
+  const [text, setText] = useState("")
+  const [typing, setTyping] = useState(false)
+  const [messages, setMessages] = useState<BotMsg[]>([
+    {
+      from: "bot",
+      text: "¡Hola! Soy Lumi, tu asistente de OrdenApp ✨ Resuelvo tus dudas sobre precios, pagos y cómo funciona el servicio. ¿Qué te gustaría saber?",
+    },
+  ])
+  useEffect(() => {
+    document.querySelector(".bot-body")?.scrollTo({ top: 99999, behavior: "smooth" })
+  }, [messages, typing, open])
+
+  const ask = (q: string) => {
+    if (!q.trim() || typing) return
+    setMessages((m) => [...m, { from: "me", text: q }])
+    setText("")
+    setTyping(true)
+    setTimeout(() => {
+      setMessages((m) => [...m, { from: "bot", ...botReply(q) }])
+      setTyping(false)
+    }, 750)
+  }
+
+  return (
+    <>
+      {!open && (
+        <button
+          type="button"
+          className="bot-fab"
+          onClick={() => setOpen(true)}
+          aria-label="Abrir asistente virtual"
+        >
+          <Icon name="message" size={22} />
+          <span>¿Dudas?</span>
+        </button>
+      )}
+      {open && (
+        <div className="bot-panel" role="dialog" aria-label="Asistente virtual">
+          <div className="bot-head">
+            <span className="bot-avatar">
+              <Icon name="sparkle" size={20} />
+            </span>
+            <div>
+              <h3>Lumi · Asistente</h3>
+              <p>
+                <i /> Responde al instante
+              </p>
+            </div>
+            <Action variant="icon" onClick={() => setOpen(false)}>
+              <Icon name="close" size={18} />
+            </Action>
+          </div>
+          <div className="bot-body">
+            {messages.map((m, i) => (
+              <div key={i} className={`bot-msg ${m.from}`}>
+                <p>{m.text}</p>
+                {m.action && (
+                  <button
+                    type="button"
+                    className="bot-link"
+                    onClick={() => {
+                      setOpen(false)
+                      go(m.action!.screen)
+                    }}
+                  >
+                    {m.action.label} <Icon name="arrow" size={13} />
+                  </button>
+                )}
+              </div>
+            ))}
+            {typing && (
+              <div className="bot-msg bot">
+                <p className="bot-typing">
+                  <i />
+                  <i />
+                  <i />
+                </p>
+              </div>
+            )}
+          </div>
+          <div className="bot-quick">
+            {quickQuestions.map((q) => (
+              <button type="button" key={q} onClick={() => ask(q)}>
+                {q}
+              </button>
+            ))}
+          </div>
+          <div className="bot-composer">
+            <input
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && ask(text)}
+              placeholder="Escribe tu duda…"
+            />
+            <Action variant="icon" onClick={() => ask(text)}>
+              <Icon name="send" size={18} />
+            </Action>
+          </div>
+        </div>
+      )}
+    </>
+  )
+}
+
+const screensWithBot: Screen[] = [
+  "home",
+  "categories",
+  "detail",
+  "customize",
+  "schedule",
+  "cleaner",
+  "address",
+  "checkout",
+  "bookings",
+  "offers",
+  "notifications",
+  "profile",
+  "settings",
+  "help",
+  "tracking",
+]
+
 export default function App() {
   const [screen, setScreen] = useState<Screen>("splash")
   const go = (next: Screen) => {
@@ -1867,8 +2233,11 @@ export default function App() {
   }
   return (
     <div className="app-shell">
-      <div className="phone-frame" key={screen}>
-        {pages[screen]}
+      <div className="phone-wrap">
+        <div className="phone-frame" key={screen}>
+          {pages[screen]}
+        </div>
+        {screensWithBot.includes(screen) && <Assistant go={go} />}
       </div>
     </div>
   )
